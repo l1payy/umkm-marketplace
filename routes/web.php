@@ -35,8 +35,21 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('products', ProductController::class)->only(['index','create','store','show']);
-    Route::resource('needs', NeedController::class)->only(['create','store','show']);
+    // Specific routes MUST come before resource catch-all
+    Route::get('/search', [ProductController::class, 'search'])->name('search');
+    Route::get('/products/mine', [ProductController::class, 'mine'])->name('products.mine');
+    Route::resource('products', ProductController::class)->only(['index','create','store','show','edit','update','destroy']);
+
+    Route::get('/needs/latest', [NeedController::class, 'latest'])->name('needs.latest');
+    Route::get('/needs/mine', [NeedController::class, 'mine'])->name('needs.mine');
+    Route::resource('needs', NeedController::class)->only(['create','store','show','edit','update','destroy']);
+
+    // Payments
+    Route::get('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'show'])->name('orders.pay');
+    Route::post('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'start'])->name('payments.start');
+    Route::get('/orders/{order}/confirm/{payment}', [\App\Http\Controllers\PaymentController::class, 'confirm'])->name('payments.confirm');
+    Route::post('/orders/{order}/complete/{payment}', [\App\Http\Controllers\PaymentController::class, 'complete'])->name('payments.complete');
+    Route::get('/orders/{order}/receipt', [\App\Http\Controllers\PaymentController::class, 'receipt'])->name('orders.receipt');
     Route::post('/needs/{need}/offers', [OfferController::class, 'store'])->name('offers.store');
 
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -51,6 +64,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
 });
 
-// Guest landing removed to simplify routes
+// Guest landing (optional): keep welcome for non-auth
+Route::get('/welcome', function () {
+    return view('welcome');
+})->name('welcome');
 
 require __DIR__.'/auth.php';

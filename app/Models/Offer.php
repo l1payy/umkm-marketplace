@@ -14,6 +14,8 @@ class Offer extends Model
         'user_id',
         'description',
         'price',
+        'eta_days',
+        'image_path',
     ];
 
     public function need()

@@ -41,38 +41,46 @@ class OrderController extends Controller
 
             if ($request->filled('product_direct')) {
                 $productId = (int) $request->input('product_direct');
+                $quantity = max(1, (int) $request->input('quantity', 1));
                 $price = optional(\App\Models\Product::find($productId))->price ?? 0;
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $productId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                     'price' => $price,
                 ]);
-                $order->update(['total' => $price]);
+                $order->update(['total' => $price * $quantity]);
             } else {
                 $offerId = (int) $request->input('offer_direct');
+                $quantity = max(1, (int) $request->input('quantity', 1));
                 $price = optional(\App\Models\Offer::find($offerId))->price ?? 0;
                 OrderItem::create([
                     'order_id' => $order->id,
                     'offer_id' => $offerId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                     'price' => $price,
                 ]);
-                $order->update(['total' => $price]);
+                $order->update(['total' => $price * $quantity]);
             }
         } else {
             $cart = Cart::with('items')->firstOrCreate(['user_id' => Auth::id()]);
-            if ($cart->items->isEmpty()) {
-                return back()->with('status', 'Keranjang kosong');
+            $selected = collect($request->input('selected', []))->map(fn($v) => (int) $v)->filter();
+            $itemsQuery = $cart->items();
+            if ($selected->isNotEmpty()) {
+                $itemsQuery->whereIn('id', $selected->all());
+            }
+            $items = $itemsQuery->get();
+            if ($items->isEmpty()) {
+                return back()->with('status', 'Pilih item yang ingin di-checkout');
             }
 
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'status' => 'pending',
-                'total' => $cart->items->sum(fn($i) => $i->price * $i->quantity),
+                'total' => $items->sum(fn($i) => $i->price * $i->quantity),
             ]);
 
-            foreach ($cart->items as $item) {
+            foreach ($items as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -82,12 +90,10 @@ class OrderController extends Controller
                 ]);
             }
 
-            $cart->items()->delete();
+            $cart->items()->whereIn('id', $items->pluck('id'))->delete();
         }
 
-        $order->update(['status' => 'completed']);
-
-        return redirect()->route('orders.index')->with('status', 'Checkout berhasil, pesanan completed');
+        return redirect()->route('orders.pay', $order)->with('status', 'Silakan pilih metode pembayaran');
     }
 
     /**

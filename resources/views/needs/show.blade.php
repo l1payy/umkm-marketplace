@@ -34,22 +34,34 @@
                     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         @forelse($need->offers as $offer)
                             <div class="rounded-lg p-4 shadow-sm ring-1 ring-gray-100 bg-white">
-                                <div class="flex items-center justify-between">
-                                    <div class="text-sm text-gray-600">by {{ $offer->user->name }}</div>
-                                    <div class="text-sm font-medium">Rp {{ number_format($offer->price) }}</div>
-                                </div>
-                                <p class="mt-2 text-sm text-gray-700">{{ $offer->description }}</p>
-                                <div class="mt-4 flex gap-2">
-                                    <a href="{{ route('chat.index', ['user' => $offer->user_id]) }}" class="inline-flex items-center px-3 py-2 rounded-lg bg-white border text-gray-700 shadow-sm min-w-[120px] justify-center">Chat Penawar</a>
-                                    <form action="{{ route('cart.add.offer', $offer) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg bg-white border text-gray-700 shadow-sm min-w-[140px] justify-center">Masukkan Keranjang</button>
-                                    </form>
-                                    <form action="{{ route('checkout.store') }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="offer_direct" value="{{ $offer->id }}">
-                                        <button type="submit" class="inline-flex items-center px-3 py-2 rounded-lg bg-white border text-gray-700 shadow-sm min-w-[110px] justify-center">Checkout</button>
-                                    </form>
+                                <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                                    <div class="sm:col-span-3">
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-sm text-gray-600">by {{ $offer->user->name }}</div>
+                                            <div class="text-sm font-medium">Rp {{ number_format($offer->price) }}</div>
+                                        </div>
+                                        <p class="mt-2 text-sm text-gray-700">{{ $offer->description }}</p>
+                                        <div class="mt-2 text-xs text-gray-500">Estimasi: {{ $offer->eta_days }} hari</div>
+                                        <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                            <a href="{{ route('chat.index', ['user' => $offer->user_id]) }}" class="sm:flex-1 px-3 py-2 rounded-lg bg-white border text-gray-700 shadow-sm text-center">Chat Penawar</a>
+                                            <form action="{{ route('cart.add.offer', $offer) }}" method="POST" class="sm:flex-1">
+                                                @csrf
+                                                <button type="submit" class="w-full px-3 py-2 rounded-lg bg-white border text-gray-700 shadow-sm">Masukkan Keranjang</button>
+                                            </form>
+                                            <form action="{{ route('checkout.store') }}" method="POST" class="sm:flex-1">
+                                                @csrf
+                                                <input type="hidden" name="offer_direct" value="{{ $offer->id }}">
+                                                <button type="submit" class="w-full px-3 py-2 rounded-lg bg-indigo-600 text-white shadow">Checkout</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        @if($offer->image_path)
+                                            <div class="w-full h-full rounded-lg overflow-hidden border bg-white">
+                                                <img class="w-full h-40 object-contain" src="{{ asset('storage/'.$offer->image_path) }}" alt="Gambar Penawaran">
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @empty
@@ -65,7 +77,7 @@
                     @if(auth()->id() === $need->user_id)
                         <p class="mt-2 text-sm text-gray-500">Kamu adalah pemilik kebutuhan ini, tidak dapat mengirim penawaran.</p>
                     @else
-                        <form class="mt-4 space-y-3" action="{{ route('offers.store', $need) }}" method="POST">
+                        <form class="mt-4 space-y-3" action="{{ route('offers.store', $need) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
@@ -78,6 +90,16 @@
                                     <input type="number" step="0.01" name="price" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
                                     @error('price') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Estimasi (hari)</label>
+                                    <input type="number" name="eta_days" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
+                                    @error('eta_days') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Gambar Penawaran (opsional)</label>
+                                <input type="file" name="image" accept="image/*" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600">
+                                @error('image') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
                             <button class="bg-indigo-600 !text-white px-4 py-2 rounded-lg shadow">Kirim</button>
                         </form>

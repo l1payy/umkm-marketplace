@@ -13,12 +13,12 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6" enctype="multipart/form-data">
         @csrf
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="__('Nama')" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
@@ -47,8 +47,40 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="address" :value="__('Alamat')" />
+            <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300">{{ old('address', $user->address) }}</textarea>
+            <x-input-error class="mt-2" :messages="$errors->get('address')" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <x-input-label for="location" :value="__('Lokasi (Kota/Kabupaten)')" />
+                <x-text-input id="location" name="location" type="text" class="mt-1 block w-full" :value="old('location', $user->location)" autocomplete="address-level2" />
+                <x-input-error class="mt-2" :messages="$errors->get('location')" />
+            </div>
+            <div>
+                <x-input-label for="phone" :value="__('Nomor Handphone')" />
+                <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
+                <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            </div>
+        </div>
+
+        <div>
+            <x-input-label for="profile_photo" :value="__('Foto Profil')" />
+            <div class="mt-1 flex items-center gap-4">
+                @if($user->profile_photo_path)
+                    <img src="{{ asset('storage/'.$user->profile_photo_path) }}" alt="Foto Profil" class="h-16 w-16 rounded-full object-cover">
+                @else
+                    <div class="h-16 w-16 rounded-full bg-gray-200"></div>
+                @endif
+                <input id="profile_photo" name="profile_photo" type="file" accept="image/*" class="block w-full text-sm text-gray-700">
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('profile_photo')" />
+        </div>
+
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
                 <p
@@ -57,7 +89,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
                     class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                >{{ __('Tersimpan.') }}</p>
             @endif
         </div>
     </form>

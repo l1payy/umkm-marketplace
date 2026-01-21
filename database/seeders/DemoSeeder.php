@@ -10,6 +10,7 @@ use App\Models\Message;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DemoSeeder extends Seeder
 {
@@ -18,6 +19,23 @@ class DemoSeeder extends Seeder
      */
     public function run(): void
     {
+            // Seed shop users with same password
+            $shops = [
+                'Handphone','Laptop','Elektronik','Aksesoris','Baju','Celana','Sepatu',
+                'Makanan','Minuman','Jasa','Otomotif','Alat Musik','Jam Tangan',
+            ];
+            foreach ($shops as $name) {
+                $email = Str::slug($name).'@example.com';
+                User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $name,
+                        'password' => Hash::make('p3p3kl4h'),
+                        'email_verified_at' => now(),
+                    ]
+                );
+            }
+
             $user = User::updateOrCreate(
                 ['email' => 'demo@example.com'],
                 [

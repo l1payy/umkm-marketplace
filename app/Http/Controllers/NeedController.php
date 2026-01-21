@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Need;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -17,11 +18,50 @@ class NeedController extends Controller
         $needs = Need::with('user')
             ->where('status', 'open')
             ->latest()
-            ->paginate(12);
+            ->take(15)
+            ->get();
 
-        return view('home', compact('needs'));
+        $products = Product::with('user')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->latest()
+            ->take(20)
+            ->get();
+
+        $categoryList = [
+            ['name' => 'Handphone', 'icon' => 'bx-mobile-alt'],
+            ['name' => 'Laptop', 'icon' => 'bx-laptop'],
+            ['name' => 'Elektronik', 'icon' => 'bx-plug'],
+            ['name' => 'Aksesoris', 'icon' => 'bx-headphone'],
+            ['name' => 'Baju', 'icon' => 'bx-closet'],
+            ['name' => 'Celana', 'icon' => 'bx-run'],
+            ['name' => 'Sepatu', 'icon' => 'bx-walk'],
+            ['name' => 'Makanan', 'icon' => 'bx-bowl-hot'],
+            ['name' => 'Minuman', 'icon' => 'bx-drink'],
+            ['name' => 'Jasa', 'icon' => 'bx-briefcase-alt-2'],
+            ['name' => 'Otomotif', 'icon' => 'bx-car'],
+            ['name' => 'Alat Musik', 'icon' => 'bx-music'],
+            ['name' => 'Jam Tangan', 'icon' => 'bx-time-five'],
+            ['name' => 'Lainnya', 'icon' => 'bx-grid-alt'],
+        ];
+
+        return view('home', compact('needs', 'products', 'categoryList'));
     }
 
+    public function latest()
+    {
+        $needs = Need::with('user')
+            ->where('status', 'open')
+            ->latest()
+            ->paginate(12);
+        return view('needs.latest', compact('needs'));
+    }
+
+    public function mine()
+    {
+        $needs = Need::with('user')->where('user_id', Auth::id())->latest()->paginate(12);
+        return view('needs.mine', compact('needs'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -75,7 +115,8 @@ class NeedController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $need = Need::where('user_id', Auth::id())->findOrFail($id);
+        return view('needs.edit', compact('need'));
     }
 
     /**
@@ -83,7 +124,35 @@ class NeedController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $need = Need::where('user_id', Auth::id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => ['required','string','max:255'],
+            'description' => ['required','string'],
+            'budget_min' => ['nullable','numeric','min:0'],
+            'budget_max' => ['nullable','numeric','min:0'],
+            'reference_image' => ['nullable','image','max:2048'],
+            'status' => ['required','in:open,closed'],
+        ]);
+
+        $path = $need->reference_image_path;
+        if ($request->hasFile('reference_image')) {
+            if ($path) {
+                Storage::disk('public')->delete($path);
+            }
+            $path = $request->file('reference_image')->store('references', 'public');
+        }
+
+        $need->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'budget_min' => $validated['budget_min'] ?? null,
+            'budget_max' => $validated['budget_max'] ?? null,
+            'reference_image_path' => $path,
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->route('needs.show', $need)->with('status', 'Kebutuhan berhasil diperbarui');
     }
 
     /**
@@ -91,6 +160,11 @@ class NeedController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $need = Need::where('user_id', Auth::id())->findOrFail($id);
+        if ($need->reference_image_path) {
+            Storage::disk('public')->delete($need->reference_image_path);
+        }
+        $need->delete();
+        return redirect()->route('needs.mine')->with('status', 'Kebutuhan berhasil dihapus');
     }
 }
