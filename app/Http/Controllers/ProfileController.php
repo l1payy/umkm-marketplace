@@ -40,6 +40,46 @@ class ProfileController extends Controller
 
         $user->save();
 
+        $types = (array) $request->input('payout_type', []);
+        $providers = (array) $request->input('payout_provider', []);
+        $accounts = (array) $request->input('payout_account', []);
+        $labels = (array) $request->input('payout_label', []);
+        $rows = [];
+        foreach ($accounts as $i => $acc) {
+            $type = isset($types[$i]) ? (string) $types[$i] : '';
+            $provider = isset($providers[$i]) ? (string) $providers[$i] : '';
+            $acc = trim((string) $acc);
+            $label = isset($labels[$i]) ? (string) $labels[$i] : null;
+            if ($acc !== '' && in_array($type, ['bank','ewallet','qris']) && $provider !== '') {
+                $rows[] = compact('type','provider','acc','label');
+            }
+        }
+        if (empty($rows)) {
+            $bankProvider = trim((string) $request->input('bank_provider', ''));
+            $bankAcc = trim((string) $request->input('bank_account_number', ''));
+            $ewProvider = trim((string) $request->input('ewallet_provider', ''));
+            $ewAcc = trim((string) $request->input('ewallet_number', ''));
+            if ($bankProvider !== '' && $bankAcc !== '') {
+                $rows[] = ['type' => 'bank', 'provider' => $bankProvider, 'acc' => $bankAcc, 'label' => null];
+            }
+            if ($ewProvider !== '' && $ewAcc !== '') {
+                $rows[] = ['type' => 'ewallet', 'provider' => $ewProvider, 'acc' => $ewAcc, 'label' => null];
+            }
+        }
+        if (!empty($rows)) {
+            \App\Models\UserPayout::where('user_id', $user->id)->delete();
+            foreach ($rows as $idx => $r) {
+                \App\Models\UserPayout::create([
+                    'user_id' => $user->id,
+                    'type' => $r['type'],
+                    'provider' => $r['provider'],
+                    'account_number' => $r['acc'],
+                    'label' => $r['label'],
+                    'is_default' => $idx === 0,
+                ]);
+            }
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 

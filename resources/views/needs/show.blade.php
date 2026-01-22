@@ -72,36 +72,69 @@
             </div>
 
             <div>
-                <div class="bg-white rounded-xl shadow ring-1 ring-gray-100 p-6">
-                    <h3 class="text-lg font-semibold">Kirim Penawaran</h3>
+                <div class="bg-white rounded-2xl shadow ring-1 ring-gray-100 p-6">
+                    <div class="flex items-center gap-2">
+                        <div class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                            <i class='bx bx-offer'></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Kirim Penawaran</h3>
+                    </div>
                     @if(auth()->id() === $need->user_id)
-                        <p class="mt-2 text-sm text-gray-500">Kamu adalah pemilik kebutuhan ini, tidak dapat mengirim penawaran.</p>
+                        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
+                            Kamu adalah pemilik kebutuhan ini, tidak dapat mengirim penawaran.
+                        </div>
                     @else
-                        <form class="mt-4 space-y-3" action="{{ route('offers.store', $need) }}" method="POST" enctype="multipart/form-data">
+                        <div class="mt-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl p-4">
+                            <div class="flex items-start gap-2">
+                                <i class='bx bx-info-circle text-indigo-600 text-xl'></i>
+                                <p class="text-sm text-indigo-800">Tulis deskripsi singkat, harga, dan estimasi pengerjaan agar pemilik kebutuhan mudah membandingkan penawaran.</p>
+                            </div>
+                        </div>
+                        <form class="mt-4 space-y-4" action="{{ route('offers.store', $need) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                                <textarea name="description" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" rows="3" required></textarea>
-                                @error('description') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class='bx bx-detail text-gray-400'></i>
+                                    </div>
+                                    <textarea name="description" class="pl-10 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" rows="3" required></textarea>
+                                </div>
+                                @error('description') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Harga</label>
-                                    <input type="number" step="0.01" name="price" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
-                                    @error('price') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <div class="relative mt-1">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-400 text-sm">Rp</span>
+                                        </div>
+                                        <input type="number" step="0.01" name="price" class="pl-10 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
+                                    </div>
+                                    @error('price') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Estimasi (hari)</label>
-                                    <input type="number" name="eta_days" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
-                                    @error('eta_days') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <div class="relative mt-1">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class='bx bx-time text-gray-400'></i>
+                                        </div>
+                                        <input type="number" name="eta_days" class="pl-10 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600" required>
+                                    </div>
+                                    @error('eta_days') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Gambar Penawaran (opsional)</label>
-                                <input type="file" name="image" accept="image/*" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600">
-                                @error('image') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                <div class="mt-1">
+                                    <input type="file" name="image" accept="image/*" class="block w-full rounded-lg border-gray-300 focus:border-indigo-600 focus:ring-indigo-600">
+                                </div>
+                                @error('image') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
-                            <button class="bg-indigo-600 !text-white px-4 py-2 rounded-lg shadow">Kirim</button>
+                            <div class="flex items-center gap-3">
+                                <button class="px-5 py-2.5 rounded-lg bg-indigo-600 !text-white shadow hover:bg-indigo-500">Kirim Penawaran</button>
+                                <a href="{{ route('needs.latest') }}" class="px-5 py-2.5 rounded-lg bg-white border text-gray-900 shadow-sm">Lihat Kebutuhan Lain</a>
+                            </div>
                         </form>
                     @endif
                 </div>

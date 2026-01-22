@@ -31,10 +31,9 @@ class NeedController extends Controller
         $categoryList = [
             ['name' => 'Handphone', 'icon' => 'bx-mobile-alt'],
             ['name' => 'Laptop', 'icon' => 'bx-laptop'],
-            ['name' => 'Elektronik', 'icon' => 'bx-plug'],
-            ['name' => 'Aksesoris', 'icon' => 'bx-headphone'],
+            ['name' => 'Elektronik', 'icon' => 'bx-devices'],
+            ['name' => 'Aksesoris', 'icon' => 'bx bx-diamond'],
             ['name' => 'Baju', 'icon' => 'bx-closet'],
-            ['name' => 'Celana', 'icon' => 'bx-run'],
             ['name' => 'Sepatu', 'icon' => 'bx-walk'],
             ['name' => 'Makanan', 'icon' => 'bx-bowl-hot'],
             ['name' => 'Minuman', 'icon' => 'bx-drink'],

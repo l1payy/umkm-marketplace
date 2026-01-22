@@ -25,6 +25,10 @@ class User extends Authenticatable
         'location',
         'phone',
         'profile_photo_path',
+        'bank_account_number',
+        'ewallet_number',
+        'bank_provider',
+        'ewallet_provider',
     ];
 
     /**
@@ -70,5 +74,10 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function payouts()
+    {
+        return $this->hasMany(UserPayout::class);
     }
 }

@@ -52,6 +52,10 @@ class ProductController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
+        if (!$this->isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('status', 'Lengkapi Profile Information terlebih dahulu untuk mengupload produk');
+        }
         return view('products.create');
     }
 
@@ -60,6 +64,10 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$this->isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('status', 'Lengkapi Profile Information terlebih dahulu untuk mengupload produk');
+        }
         $validated = $request->validate([
             'name' => ['required','string','max:255'],
             'category' => ['nullable','string','max:50', Rule::in([
@@ -127,6 +135,20 @@ class ProductController extends Controller
 
         return redirect()->route('products.show', $product)->with('status', 'Produk berhasil dibuat');
     }
+    
+    private function isProfileComplete($user): bool
+    {
+        if (!$user) return false;
+        $required = [
+            trim((string) $user->name) !== '',
+            trim((string) $user->email) !== '',
+            trim((string) $user->address) !== '',
+            trim((string) $user->location) !== '',
+            trim((string) $user->phone) !== '',
+        ];
+        $hasPayout = ($user->payouts()->count() ?? 0) > 0;
+        return array_reduce($required, fn($carry, $v) => $carry && $v, true) && $hasPayout;
+    }
 
     /**
      * Display the specified resource.
@@ -154,7 +176,7 @@ class ProductController extends Controller
      */
     public function edit(string $id)
     {
-        $product = Product::where('user_id', Auth::id())->findOrFail($id);
+        $product = Product::with('detail')->where('user_id', Auth::id())->findOrFail($id);
         return view('products.edit', compact('product'));
     }
 
@@ -167,9 +189,18 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'name' => ['required','string','max:255'],
+            'category' => ['nullable','string','max:50', Rule::in([
+                'Handphone','Laptop','Elektronik','Aksesoris','Baju','Celana','Sepatu','Makanan','Minuman','Jasa','Otomotif','Alat Musik','Jam Tangan'
+            ])],
             'description' => ['nullable','string'],
             'price' => ['required','numeric','min:0'],
             'image' => ['nullable','image','max:2048'],
+            'sku' => ['nullable','string','max:255'],
+            'material' => ['nullable','string','max:255'],
+            'care_label' => ['nullable','string','max:255'],
+            'long_description' => ['nullable','string'],
+            'specs_keys' => ['nullable','array'],
+            'specs_values' => ['nullable','array'],
         ]);
 
         $path = $product->image_path;
@@ -182,10 +213,33 @@ class ProductController extends Controller
 
         $product->update([
             'name' => $validated['name'],
+            'category' => $validated['category'] ?? $product->category,
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'image_path' => $path,
         ]);
+
+        $specs = [];
+        $keys = $validated['specs_keys'] ?? [];
+        $values = $validated['specs_values'] ?? [];
+        foreach ($keys as $idx => $k) {
+            $k = trim((string)$k);
+            $v = isset($values[$idx]) ? trim((string)$values[$idx]) : '';
+            if ($k !== '' && $v !== '') {
+                $specs[$k] = $v;
+            }
+        }
+
+        \App\Models\ProductDetail::updateOrCreate(
+            ['product_id' => $product->id],
+            [
+                'sku' => $validated['sku'] ?? null,
+                'material' => $validated['material'] ?? null,
+                'care_label' => $validated['care_label'] ?? null,
+                'specs' => $specs ?: null,
+                'long_description' => $validated['long_description'] ?? null,
+            ]
+        );
 
         return redirect()->route('products.show', $product)->with('status', 'Produk berhasil diperbarui');
     }

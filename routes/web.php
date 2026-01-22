@@ -69,4 +69,6 @@ Route::get('/welcome', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::post('/webhook/payment', [\App\Http\Controllers\PaymentWebhookController::class, 'handle'])->name('webhook.payment');
+
 require __DIR__.'/auth.php';

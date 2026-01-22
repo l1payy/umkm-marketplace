@@ -11,6 +11,7 @@ class Payment extends Model
 
     protected $fillable = [
         'order_id',
+        'seller_payout_id',
         'method',
         'provider',
         'amount',
@@ -30,5 +31,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Order::class);
     }
-}
 
+    public function sellerPayout()
+    {
+        return $this->belongsTo(UserPayout::class, 'seller_payout_id');
+    }
+}

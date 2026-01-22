@@ -21,6 +21,10 @@ class ProfileUpdateRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:1000'],
             'location' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'bank_account_number' => ['nullable', 'string', 'max:50'],
+            'ewallet_number' => ['nullable', 'string', 'max:50'],
+            'bank_provider' => ['nullable', 'string', 'max:50'],
+            'ewallet_provider' => ['nullable', 'string', 'max:50'],
             'profile_photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
